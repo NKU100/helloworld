@@ -1,7 +1,5 @@
 {
-  "dependencies": [
-    "fmt"
-  ],
   "name": "1",
-  "version-string": "hello world"
+  "version-string": "hello world",
+  "dependencies": ["fmt", "gtest"]
 }

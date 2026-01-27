@@ -1,9 +1,5 @@
-﻿cmake_minimum_required(VERSION 4.1)
+﻿cmake_minimum_required(VERSION 3.31)
 
 project(HelloWorld)
 
-find_package(fmt CONFIG REQUIRED)
-
-add_executable(HelloWorld helloworld.cpp)
-
-target_link_libraries(HelloWorld PRIVATE fmt::fmt)
+add_subdirectory(helloworld)

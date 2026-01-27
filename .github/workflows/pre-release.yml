@@ -1,0 +1,58 @@
+name: Pre Release
+
+on:
+  push:
+    branches:
+      - "main"
+    tags-ignore:
+      - "v**"
+      - "ci"
+  workflow_dispatch:
+
+jobs:
+  pre-release:
+    name: Pre Release
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+
+      - name: Configure and Build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x86 -host_arch=amd64
+          IF %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
+          cmake --preset x86-release
+          IF %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
+          cmake --build --preset x86-release
+
+      - name: Update ci tag
+        run: |
+          git tag -f ci
+          git push origin ci -f
+
+      - name: Build changelog
+        uses: orhun/git-cliff-action@v4
+        env:
+          OUTPUT: build/changelog.md
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: build/changelog.md
+          prerelease: true
+          name: CI Build
+          tag_name: ci
+          files: |
+            **/helloworld/*.exe
+            **/helloworld/*.dll
