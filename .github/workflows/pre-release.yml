@@ -25,7 +25,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: build
-          key: ${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/vcpkg_installed/**') }}
 
       - name: Configure and Build
         shell: cmd
@@ -53,6 +53,4 @@ jobs:
           prerelease: true
           name: CI Build
           tag_name: ci
-          files: |
-            **/helloworld/*.exe
-            **/helloworld/*.dll
+          files: "**/HelloWorld.exe"
