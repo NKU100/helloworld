@@ -60,7 +60,7 @@ jobs:
         env:
           OUTPUT: build/changelog.md
         with:
-          args: --unreleased
+          args: --unreleased --tag "CI Build"
 
       - name: Update ci tag
         run: |
