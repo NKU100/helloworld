@@ -1,6 +1,9 @@
 # HelloWorld
 
-一个基于 CMake + vcpkg 的 C++ 项目，使用 MSVC 静态链接，支持 x86/x64 双架构构建，并通过 GitHub Actions 实现自动化预发布。
+[![Pre Release](https://github.com/NKU100/helloworld/actions/workflows/pre-release.yml/badge.svg)](https://github.com/NKU100/helloworld/actions/workflows/pre-release.yml)
+[![Release](https://github.com/NKU100/helloworld/actions/workflows/release.yml/badge.svg)](https://github.com/NKU100/helloworld/actions/workflows/release.yml)
+
+一个基于 CMake + vcpkg 的 C++ 项目，使用 MSVC 静态链接，支持 x86/x64 双架构构建，并通过 GitHub Actions 实现自动化 CI 预发布和正式发版。
 
 ## 功能
 
@@ -71,7 +74,9 @@ helloworld/
 ├── COMMIT_CONVENTION.md        # 提交规范
 ├── .github/
 │   └── workflows/
-│       └── pre-release.yml     # CI 预发布工作流
+│       ├── build.yml           # 可复用的构建工作流
+│       ├── pre-release.yml     # CI 预发布工作流
+│       └── release.yml         # 正式发版工作流
 └── helloworld/                 # 子模块 - 应用源码
     ├── CMakeLists.txt          # 子模块 CMake 配置（含版本管理）
     ├── helloworld.cpp          # 主程序源码
@@ -80,27 +85,44 @@ helloworld/
 
 ## CI/CD
 
-项目使用 GitHub Actions 实现自动化预发布，工作流定义在 `.github/workflows/pre-release.yml`。
+项目使用 GitHub Actions 实现自动化构建与发布，支持 CI 预发布和正式发版两种模式。
 
-### 触发条件
-
-- 推送到 `main` 分支
-- 手动触发（workflow_dispatch）
-
-### 构建流程
+### 工作流架构
 
 ```
-vcpkg-install (x86) ──┐
-                      ├─→ build (x86) ──┐
-vcpkg-install (x64) ──┘                 │
-                      ├─→ build (x64) ──┼─→ pre-release
-                      └─────────────────┘
+pre-release.yml ─┐
+                 ├──► build.yml (可复用)
+release.yml ────┘     ├── vcpkg-install (x86 + x64 并行)
+                      └── build (x86 + x64 并行)
 ```
 
-x86 和 x64 的依赖安装与构建**全程并行**，构建完成后自动发布到 GitHub Releases（tag: `ci`），产物包括：
+### Pre Release（CI 预发布）
 
-- `HelloWorld-x86.exe`
-- `HelloWorld-x64.exe`
+| 触发条件 | 产物 | Release |
+|---|---|---|
+| 推送到 `main` 分支 | `HelloWorld-x86.exe`<br>`HelloWorld-x64.exe` | tag: `ci`<br>prerelease: true |
+| 手动触发 | | |
+
+- Changelog：上一个 `v*` tag → 当前 HEAD（`--unreleased`）
+- 每次构建会更新 `ci` tag 到最新提交
+
+### Release（正式发版）
+
+| 触发条件 | 产物 | Release |
+|---|---|---|
+| 推送 `v*` tag（如 `v1.0.0`） | `HelloWorld-v1.0.0-x86.exe`<br>`HelloWorld-v1.0.0-x64.exe` | tag: `v1.0.0`<br>prerelease: false |
+| 手动触发 | | |
+
+- Changelog：上一个 `v*` tag → 当前 `v*` tag（`--latest`）
+- 产物文件名带版本号
+
+### 发版流程
+
+```bash
+# 正式发版
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ## 提交规范
 

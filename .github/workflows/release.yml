@@ -1,17 +1,14 @@
-name: Pre Release
+name: Release
 
 on:
   push:
-    branches:
-      - "main"
-    tags-ignore:
+    tags:
       - "v**"
-      - "ci"
   workflow_dispatch:
 
 concurrency:
-  group: pre-release
-  cancel-in-progress: true
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -19,8 +16,8 @@ jobs:
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-  pre-release:
-    name: Pre Release
+  release:
+    name: Release
     needs: build
     runs-on: windows-2025
     permissions:
@@ -49,8 +46,9 @@ jobs:
       - name: Rename artifacts
         shell: pwsh
         run: |
-          Rename-Item -Path "artifacts/x86/HelloWorld.exe" -NewName "HelloWorld-x86.exe"
-          Rename-Item -Path "artifacts/x64/HelloWorld.exe" -NewName "HelloWorld-x64.exe"
+          $ver = "${{ github.ref_name }}"
+          Rename-Item -Path "artifacts/x86/HelloWorld.exe" -NewName "HelloWorld-${ver}-x86.exe"
+          Rename-Item -Path "artifacts/x64/HelloWorld.exe" -NewName "HelloWorld-${ver}-x64.exe"
 
       - name: Remove ci tag locally
         run: git tag -d ci || true
@@ -60,20 +58,15 @@ jobs:
         env:
           OUTPUT: build/changelog.md
         with:
-          args: --unreleased
-
-      - name: Update ci tag
-        run: |
-          git tag -f ci
-          git push origin ci -f
+          args: --latest
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           body_path: build/changelog.md
-          prerelease: true
-          name: CI Build
-          tag_name: ci
+          prerelease: false
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: |
-            artifacts/x86/HelloWorld-x86.exe
-            artifacts/x64/HelloWorld-x64.exe
+            artifacts/x86/HelloWorld-${{ github.ref_name }}-x86.exe
+            artifacts/x64/HelloWorld-${{ github.ref_name }}-x64.exe
