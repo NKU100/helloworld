@@ -1,5 +1,5 @@
 {
-  "name": "1",
-  "version-string": "hello world",
-  "dependencies": ["fmt", "gtest"]
+  "name": "helloworld",
+  "version-string": "1.0.0",
+  "dependencies": ["fmt"]
 }
