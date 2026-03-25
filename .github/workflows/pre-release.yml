@@ -94,7 +94,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: HelloWorld-${{ matrix.arch }}
-          path: build/${{ matrix.preset }}/HelloWorld.exe
+          path: build/${{ matrix.preset }}/helloworld/HelloWorld.exe
+          if-no-files-found: error
           retention-days: 1
 
   pre-release:
